@@ -91,6 +91,8 @@ paths:
           schema:
             type: string
           example: sdfgfd-sdfgf4d-sdfgfdsd-sdfgfds
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:

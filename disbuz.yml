@@ -1,0 +1,378 @@
+openapi: 3.0.3
+info:
+  title: Disbuz API
+  description: API for disbuz payout system.
+  version: 1.0.0
+
+paths:
+  /v1/identity/login/:
+    post:
+      tags:
+        - Authentication
+      parameters:
+        - name: X-CLIENTID
+          in: header
+          required: true
+          description: Client identifier for the API.
+          schema:
+            type: string
+          example: sdfgfd-sdfgf4d-sdfgfdsd-sdfgfds
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: The email address of the user.
+                  example: test@example.com
+                public_key:
+                  type: string
+                  description: The client public key.
+                  example: sdfgfd-sdfgf4d-sdfgfdsd-sdfgfds
+                secret_key:
+                  type: string
+                  description: The client secret key.
+                  example: sdfgfd-sdfgf4d-sdfgfdsd-sdfgfds
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access:
+                    type: string
+                    description: The access token for the session.
+                  refresh:
+                    type: string
+                    description: The refresh token for the session.
+                example:
+                  access: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ...
+                  refresh: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ...
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Error message describing why the request failed.
+                example:
+                  detail: Invalid email or public key.
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Error message for unauthorized access.
+                example:
+                  detail: Missing or invalid X-CLIENTID header.
+  /v1/payment/banks/ngn/:
+    get:
+      summary: Get a list of banks for NGN currency
+      tags:
+        - Payments
+      parameters:
+        - name: X-CLIENTID
+          in: header
+          required: true
+          description: Client identifier for the API.
+          schema:
+            type: string
+          example: sdfgfd-sdfgf4d-sdfgfdsd-sdfgfds
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: A list of banks for NGN currency.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                      description: The name of the bank.
+                      example: UBA
+                    code:
+                      type: string
+                      description: The code of the bank.
+                      example: 000004
+                    cbn_code:
+                      type: string
+                      description: The CBN code of the bank.
+                      example: "101"
+                    currency_code:
+                      type: string
+                      description: The currency code for the bank.
+                      example: NGN
+              example:
+                - name: UBA
+                  code: "000004"
+                  cbn_code: "101"
+                  currency_code: NGN
+                - name: Access Bank
+                  code: "000014"
+                  cbn_code: "102"
+                  currency_code: NGN
+        '401':
+          description: Unauthorized - Missing or invalid `X-CLIENTID` header.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Error message for unauthorized access.
+                example:
+                  detail: Missing or invalid X-CLIENTID header.
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Error message describing the server error.
+                example:
+                  detail: An internal server error occurred.
+  /v1/payment/name-enquiry/NGN/:
+    get:
+      summary: Retrieve account holder information
+      tags:
+        - Payments
+      parameters:
+        - name: X-CLIENTID
+          in: header
+          required: true
+          description: Client identifier for the API.
+          schema:
+            type: string
+          example: sdfgfd-sdfgf4d-sdfgfdsd-sdfgfds
+        - name: bank_code
+          in: query
+          required: true
+          description: The bank code of the bank. You can use either the bank_code or the cbn_code.
+          schema:
+            type: string
+          example: "101"
+        - name: account_number
+          in: query
+          required: true
+          description: The account number to verify.
+          schema:
+            type: string
+          example: "1700263070"
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Account information retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  account_name:
+                    type: string
+                    description: Name of the account holder.
+                    example: John Doe
+                  account_number:
+                    type: string
+                    description: The queried account number.
+                    example: "1700263070"
+              example:
+                account_name: John Doe
+                account_number: "1700263070"
+        '400':
+          description: Bad Request - Missing or invalid query parameters.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Error message for the bad request.
+                example:
+                  detail: Invalid bank_code or account_number.
+        '401':
+          description: Unauthorized - Invalid or missing credentials.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Error message for unauthorized access.
+                example:
+                  detail: Missing or invalid authorization token.
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Error message describing the server error.
+                example:
+                  detail: An internal server error occurred.
+  /v1/payment/initiate-payout/:
+    post:
+      summary: Initiate a payout
+      tags:
+        - Payments
+      parameters:
+        - name: X-CLIENTID
+          in: header
+          required: true
+          description: Client identifier for the API.
+          schema:
+            type: string
+          example: sdfgfd-sdfgf4d-sdfgfdsd-sdfgfds
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                currency:
+                  type: string
+                  description: The currency of the payout.
+                  example: "NGN"
+                amount:
+                  type: number
+                  description: The amount to be paid out.
+                  example: 100
+                narration:
+                  type: string
+                  description: A description or reason for the payout.
+                  example: "Test Payout"
+                merchant_reference:
+                  type: string
+                  description: The reference for the merchant's payout request.
+                  example: "ptest020"
+                beneficiary:
+                  type: object
+                  description: Information about the payout beneficiary.
+                  properties:
+                    account_number:
+                      type: string
+                      description: The beneficiary's account number.
+                      example: "2049468768"
+                    bank_code:
+                      type: string
+                      description: The beneficiary's bank code. You can use either the bank_code or the cbn_code.
+                      example: "033"
+                    bank_name:
+                      type: string
+                      description: The beneficiary's bank name.
+                      example: "UBA"
+                    account_name:
+                      type: string
+                      description: The beneficiary's account name.
+                      example: "ADIGUN SHERIF AKANNI"
+                webhook_url:
+                  type: string
+                  description: URL for webhook notifications related to this payout.
+                  example: "https://webhook.site/3419fdea-d111-4045-a8c1-17df102cb3c4"
+            example:
+              currency: "NGN"
+              amount: 100
+              narration: "Test Payout"
+              merchant_reference: "ptest020"
+              beneficiary:
+                account_number: "1049368760"
+                bank_code: "033"
+                bank_name: "UBA"
+                account_name: "John Doe"
+              webhook_url: "https://webhook.site/3419fdea-d111-4045-a8c1-17df102cb3c4"
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Payout initiated successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: The status of the payout initiation.
+                    example: "Processing"
+                  transaction_id:
+                    type: string
+                    description: Unique ID of the payout transaction.
+                    example: "txn_12345"
+                  message:
+                    type: string
+                    description: Amount Paid.
+                    example: "100.00"
+              example:
+                status: "Processing"
+                reference: "txn_12345"
+                amount: "100.00"
+        '400':
+          description: Bad Request - Invalid data or missing required fields.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Error message for the bad request.
+                example:
+                  detail: "Invalid beneficiary details."
+        '401':
+          description: Unauthorized - Missing or invalid credentials.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Error message for unauthorized access.
+                example:
+                  detail: "Invalid X-CLIENTID header."
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Error message describing the server error.
+                example:
+                  detail: "An internal server error occurred."
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

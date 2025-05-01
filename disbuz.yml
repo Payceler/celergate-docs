@@ -3,7 +3,9 @@ info:
   title: Disbuz API
   description: API for disbuz payout system.
   version: 1.0.0
-
+servers:
+  - url: https://disbuzapi.celergate.net
+    description: Sandbox Environment
 paths:
   /v1/identity/login/:
     post:

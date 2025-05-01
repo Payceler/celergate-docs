@@ -3,7 +3,9 @@ info:
   title: Endoz API
   description: API for endoz openbanking platform.
   version: 1.0.0
-
+servers:
+  - url: https://endozapi.celergate.net
+    description: Sandbox Environment
 paths:
   /login/:
     post:
@@ -32,7 +34,7 @@ paths:
                 public_key:
                   type: string
                   description: The client public key.
-                  example: sdfgfd-sdfgf4d-sdfgfdsd-sdfgfds
+                  example: 1e89ffb6-5a40-4df1-b1b9-ff1c832214f0
                 secret_key:
                   type: string
                   description: The client secret key.

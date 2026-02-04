@@ -318,24 +318,25 @@ paths:
           description: Payment history retrieved successfully.
           content:
             application/json:
-              type: object
-              properties:
-                count:
-                  type: integer
-                  example: 120
-                next:
-                  type: string
-                  nullable: true
-                  example: null
-                previous:
-                  type: string
-                  nullable: true
-                  example: null
-                results:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/Payment'
-                  
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    example: 120
+                  next:
+                    type: string
+                    nullable: true
+                    example: null
+                  previous:
+                    type: string
+                    nullable: true
+                    example: null
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Payment'
+
         '404':
           description: Payment not found
           content:
@@ -359,61 +360,61 @@ components:
   schemas:
     Payment:
       type: object
-        properties:
-          id:
-            type: integer
-            description: Unique identifier for the payment.
-            example: 53
-          our_reference:
-            type: string
-            description: Internal reference for the payment.
-            example: "202503131111096386ed356c98f9a4"
-          amount:
-            type: string
-            description: Amount of the payment.
-            example: "5.00"
-          transaction_ref:
-            type: string
-            description: Reference for the transaction.
-            example: "34534redf3d00"
-          currency_code:
-            type: string
-            description: Currency code of the payment.
-            example: "GBP"
-          currency_symbol:
-            type: string
-            description: Currency symbol of the payment.
-            example: "£"
-          narration:
-            type: string
-            description: Description or reason for the payment.
-            example: "Gift"
-          status:
-            type: string
-            description: Status of the payment.
-            example: "PENDING"
-          payer_name:
-            type: string
-            description: Name of the payer.
-            example: ""
-          metadata:
-            type: object
-            description: Additional metadata for the payment.
-            nullable: true
-          webhook_url:
-            type: string
-            description: URL for webhook notifications related to this payment.
-            example: "https://webhook.site/481927c8-36d7-4cc0-a9de-49562206d9b1"
-          redirect_url:
-            type: string
-            description: URL to redirect after payment.
-            example: "https://wikipedia.com"
-          created_on:
-            type: string
-            format: date-time
-            description: Timestamp when the payment was created.
-            example: "2025-03-13T11:11:09.638493Z"
-          institution_code:
-            type: string
-            description: Institution code related to the payment.
-            example: ""
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the payment.
+          example: 53
+        our_reference:
+          type: string
+          description: Internal reference for the payment.
+          example: "202503131111096386ed356c98f9a4"
+        amount:
+          type: string
+          description: Amount of the payment.
+          example: "5.00"
+        transaction_ref:
+          type: string
+          description: Reference for the transaction.
+          example: "34534redf3d00"
+        currency_code:
+          type: string
+          description: Currency code of the payment.
+          example: "GBP"
+        currency_symbol:
+          type: string
+          description: Currency symbol of the payment.
+          example: "£"
+        narration:
+          type: string
+          description: Description or reason for the payment.
+          example: "Gift"
+        status:
+          type: string
+          description: Status of the payment.
+          example: "PENDING"
+        payer_name:
+          type: string
+          description: Name of the payer.
+          example: ""
+        metadata:
+          type: object
+          description: Additional metadata for the payment.
+          nullable: true
+        webhook_url:
+          type: string
+          description: URL for webhook notifications related to this payment.
+          example: "https://webhook.site/481927c8-36d7-4cc0-a9de-49562206d9b1"
+        redirect_url:
+          type: string
+          description: URL to redirect after payment.
+          example: "https://wikipedia.com"
+        created_on:
+          type: string
+          format: date-time
+          description: Timestamp when the payment was created.
+          example: "2025-03-13T11:11:09.638493Z"
+        institution_code:
+          type: string
+          description: Institution code related to the payment.
+          example: ""

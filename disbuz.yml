@@ -371,6 +371,83 @@ paths:
                     description: Error message describing the server error.
                 example:
                   detail: "An internal server error occurred."
+  /v1/payment/client-gateways/{currency_code}/balance/:
+    get:
+      summary: Get gateway balance for a currency
+      tags:
+        - Payments
+      parameters:
+        - name: X-CLIENTID
+          in: header
+          required: true
+          description: Client identifier for the API.
+          schema:
+            type: string
+          example: sdfgfd-sdfgf4d-sdfgfdsd-sdfgfds
+        - name: currency_code
+          in: path
+          required: true
+          description: The currency code to retrieve the gateway balance for.
+          schema:
+            type: string
+          example: NGN
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Gateway balance retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  balance:
+                    type: string
+                    description: The current balance of the gateway.
+                    example: "500000.00"
+                  gateway_name:
+                    type: string
+                    description: The name of the gateway.
+                    example: "Flutterwave"
+              example:
+                balance: "500000.00"
+                gateway_name: "Flutterwave"
+        '400':
+          description: Bad Request - Invalid currency code or gateway not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Error message for the bad request.
+                example:
+                  detail: "Error getting gateway balance."
+        '401':
+          description: Unauthorized - Missing or invalid credentials.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Error message for unauthorized access.
+                example:
+                  detail: "Missing or invalid authorization token."
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Error message describing the server error.
+                example:
+                  detail: "An internal server error occurred."
   /v1/payment/transaction/{id}:
     get:
       summary: Retrieve transaction

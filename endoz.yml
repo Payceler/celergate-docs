@@ -350,6 +350,218 @@ paths:
                 example:
                   detail: "Payment not found."
 
+  '/payments/{transaction_ref}/refund/':
+    get:
+      summary: List refunds for a payment
+      description: Lists refunds previously issued against a settled payment.
+      tags:
+        - Refunds
+      parameters:
+        - name: X-CLIENTID
+          in: header
+          required: true
+          description: Client identifier for the API.
+          schema:
+            type: string
+          example: sdfgfd-sdfgf4d-sdfgfdsd-sdfgfds
+        - name: transaction_ref
+          in: path
+          required: true
+          description: Reference for the transaction to list refunds for.
+          schema:
+            type: string
+          example: 34534redf3d00
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Refunds retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RefundRecord'
+        '400':
+          description: Bad Request - Payment with this transaction reference was not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Error message for the bad request.
+                example:
+                  detail: "Payment with ID not found."
+        '401':
+          description: Unauthorized - Missing or invalid `X-CLIENTID` header.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Error message for unauthorized access.
+                example:
+                  detail: Missing or invalid X-CLIENTID header.
+    post:
+      summary: Refund a payment
+      description: Processes a refund for a previously settled payment. Only allowed while there is sufficient refundable amount left on the payment (amount minus previous completed/processing refunds and withdrawal charges) and sufficient balance in the settlement account.
+      tags:
+        - Refunds
+      parameters:
+        - name: X-CLIENTID
+          in: header
+          required: true
+          description: Client identifier for the API.
+          schema:
+            type: string
+          example: sdfgfd-sdfgf4d-sdfgfdsd-sdfgfds
+        - name: transaction_ref
+          in: path
+          required: true
+          description: Reference for the settled transaction to refund.
+          schema:
+            type: string
+          example: 34534redf3d00
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - amount
+                - narration
+              properties:
+                reference:
+                  type: string
+                  description: Merchant-supplied reference for the refund. Auto-generated if omitted.
+                  example: "rf-34534redf3d00"
+                amount:
+                  type: number
+                  description: The amount to refund.
+                  example: 5
+                narration:
+                  type: string
+                  description: A description or reason for the refund.
+                  example: "Customer requested refund"
+                webhook_url:
+                  type: string
+                  description: URL for webhook notifications related to this refund.
+                  example: "https://webhook.site/481927c8-36d7-4cc0-a9de-49562206d9b1"
+                metadata:
+                  type: object
+                  description: Additional metadata for the refund.
+                  nullable: true
+      responses:
+        '201':
+          description: Refund created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefundRecord'
+        '400':
+          description: Bad Request - Payment not found or not refundable, missing recipient account details, a refund with the given `reference` already exists for this payment, insufficient refundable amount, insufficient settlement account balance, or the refund payout could not be processed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Error message for the bad request.
+                example:
+                  detail: "Insufficient refundable amount. Only 3.50 is available for refund."
+        '401':
+          description: Unauthorized - Missing or invalid `X-CLIENTID` header.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Error message for unauthorized access.
+                example:
+                  detail: Missing or invalid X-CLIENTID header.
+
+  '/payments/{transaction_ref}/refundable-amount/':
+    get:
+      summary: Get refundable amount for a payment
+      description: Returns how much of a settled payment is still available to refund, i.e. the payment amount minus amounts already refunded (completed or processing). This does not deduct withdrawal charges, since those depend on the amount you choose to refund - see `GET /settlement-accounts/{identifier}/charges/` for the fee rates.
+      tags:
+        - Refunds
+      parameters:
+        - name: X-CLIENTID
+          in: header
+          required: true
+          description: Client identifier for the API.
+          schema:
+            type: string
+          example: sdfgfd-sdfgf4d-sdfgfdsd-sdfgfds
+        - name: transaction_ref
+          in: path
+          required: true
+          description: Reference for the settled transaction to check.
+          schema:
+            type: string
+          example: 34534redf3d00
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Refundable amount retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  amount:
+                    type: string
+                    description: Original amount of the payment.
+                    example: "5.00"
+                  total_refunded:
+                    type: string
+                    description: Total amount already refunded (completed or processing).
+                    example: "1.50"
+                  refundable_amount:
+                    type: string
+                    description: Amount still available to refund (amount minus total_refunded).
+                    example: "3.50"
+                  currency:
+                    type: string
+                    description: Currency code of the payment.
+                    example: "GBP"
+        '400':
+          description: Bad Request - Payment with this transaction reference was not found or is not refundable.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Error message for the bad request.
+                example:
+                  detail: "Payment with ID not found or is not refundable."
+        '401':
+          description: Unauthorized - Missing or invalid `X-CLIENTID` header.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Error message for unauthorized access.
+                example:
+                  detail: Missing or invalid X-CLIENTID header.
+
   '/withdrawals/{settlement_account_identifier}/':
     get:
       summary: List withdrawals
@@ -660,6 +872,65 @@ paths:
                 example:
                   detail: Missing or invalid X-CLIENTID header.
 
+  '/settlement-accounts/{identifier}/balance/':
+    get:
+      summary: Get settlement account balance
+      tags:
+        - Settlement Accounts
+      parameters:
+        - name: X-CLIENTID
+          in: header
+          required: true
+          description: Client identifier for the API.
+          schema:
+            type: string
+          example: sdfgfd-sdfgf4d-sdfgfdsd-sdfgfds
+        - name: identifier
+          in: path
+          required: true
+          description: Identifier of the settlement account.
+          schema:
+            type: string
+          example: "987d28af0d"
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Balance retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  balance:
+                    type: string
+                    description: Current balance of the settlement account.
+                    example: "4500.00"
+        '401':
+          description: Unauthorized - Missing or invalid `X-CLIENTID` header.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Error message for unauthorized access.
+                example:
+                  detail: Missing or invalid X-CLIENTID header.
+        '404':
+          description: Settlement account not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Error message for missing settlement account.
+                example:
+                  detail: "Not found."
+
 components:
   securitySchemes:
     bearerAuth:
@@ -871,4 +1142,92 @@ components:
         currency:
           type: integer
           description: ID of the withdrawal's currency.
+          example: 1
+
+    RefundRecord:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the refund.
+          example: 91
+        our_reference:
+          type: string
+          description: Internal reference for the refund.
+          example: "202503131111096386ed356c98f9a4"
+        transaction_ref:
+          type: string
+          description: Reference for the refund transaction.
+          example: "34534redf3d00"
+        amount:
+          type: string
+          description: Amount of the refund.
+          example: "5.00"
+        company_name:
+          type: string
+          description: Name of the company that owns the settlement account.
+          example: "Celergate Ltd"
+        balance_after:
+          type: string
+          description: Settlement account balance after the refund.
+          example: "4500.00"
+        recipient_account_number:
+          type: string
+          description: Payer account number the refund is sent to.
+          example: "00123456"
+        recipient_account_name:
+          type: string
+          description: Payer account name.
+          example: "John Doe"
+        recipient_sortcode:
+          type: string
+          description: Payer sort code.
+          example: "04-00-04"
+        narration:
+          type: string
+          description: Description or reason for the refund.
+          example: "Customer requested refund"
+        recipient_bank_name:
+          type: string
+          description: Payer's bank name.
+          example: "Barclays"
+        status:
+          type: string
+          description: Status of the refund.
+          enum:
+            - PROCESSING
+            - COMPLETED
+            - FAILED
+          example: "PROCESSING"
+        created_on:
+          type: string
+          format: date-time
+          description: Timestamp when the refund was created.
+          example: "2025-03-13T11:11:09.638493Z"
+        charges:
+          type: string
+          description: Charges applied to the refund.
+          example: "1.50"
+        error_message:
+          type: string
+          description: Error message if the refund failed.
+          nullable: true
+          example: null
+        is_concluded:
+          type: boolean
+          description: Whether the refund has reached a final state.
+          example: false
+        paid_on:
+          type: string
+          format: date-time
+          description: Timestamp when the refund was completed.
+          nullable: true
+          example: null
+        metadata:
+          type: object
+          description: Additional metadata for the refund.
+          nullable: true
+        currency:
+          type: integer
+          description: ID of the refund's currency.
           example: 1
